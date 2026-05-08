@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard – ExamZone</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+:root {
+  --primary:#2563eb; --primary-dark:#1d4ed8; --primary-light:#eff6ff;
+  --accent:#f59e0b; --success:#10b981; --danger:#ef4444;
+  --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+  --bg:#f8fafc; --white:#fff;
+  --sidebar:220px; --radius:12px; --radius-sm:8px;
+}
+body { font-family:'Poppins',sans-serif; color:var(--text); background:var(--bg); display:flex; min-height:100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:var(--sidebar); background:#0f172a; color:#94a3b8;
+  display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:50;
+}
+.sidebar-brand { padding:24px 20px; border-bottom:1px solid #1e293b; }
+.sidebar-brand .logo { color:white; font-size:1.25rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+.sidebar-brand .logo i { color:var(--primary); }
+.sidebar-brand .logo b { color:var(--accent); }
+.sidebar-nav { flex:1; padding:16px 0; overflow-y:auto; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:11px 20px;
+  color:#94a3b8; text-decoration:none; font-size:0.88rem; font-weight:500;
+  transition:all 0.15s; cursor:pointer; border:none; background:none; width:100%;
+}
+.nav-item:hover, .nav-item.active { background:#1e293b; color:white; }
+.nav-item i { width:18px; text-align:center; font-size:0.95rem; }
+.sidebar-footer { padding:16px 20px; border-top:1px solid #1e293b; }
+.logout-btn {
+  display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px;
+  background:rgba(239,68,68,0.1); color:#f87171; border:none; border-radius:var(--radius-sm);
+  font-family:'Poppins',sans-serif; font-size:0.85rem; font-weight:500; cursor:pointer; transition:all 0.2s;
+}
+.logout-btn:hover { background:rgba(239,68,68,0.2); }
+
+/* ── MAIN ── */
+.main { margin-left:var(--sidebar); flex:1; display:flex; flex-direction:column; min-height:100vh; }
+.topbar {
+  background:var(--white); border-bottom:1px solid var(--border);
+  padding:0 28px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:40;
+}
+.topbar h1 { font-size:1.1rem; font-weight:600; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.admin-badge { background:var(--primary-light); color:var(--primary); padding:6px 12px; border-radius:50px; font-size:0.8rem; font-weight:600; }
+
+.content { padding:28px; flex:1; }
+
+/* ── STATS ── */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+.stat-card {
+  background:var(--white); border:1px solid var(--border); border-radius:var(--radius);
+  padding:20px; display:flex; align-items:center; gap:16px;
+}
+.stat-icon { width:48px; height:48px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+.stat-info p { font-size:0.78rem; color:var(--muted); margin-bottom:4px; }
+.stat-info h3 { font-size:1.5rem; font-weight:700; }
+
+/* ── TOOLBAR ── */
+.toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+.toolbar h2 { font-size:1.1rem; font-weight:600; }
+.btn-new {
+  background:var(--primary); color:white; border:none; padding:10px 20px;
+  border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:0.88rem; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; gap:8px; transition:background 0.2s;
+}
+.btn-new:hover { background:var(--primary-dark); }
+
+/* ── TABLE ── */
+.table-wrap { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead th { background:#f8fafc; padding:12px 16px; text-align:left; font-size:0.78rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; border-bottom:1px solid var(--border); }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.15s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:#fafbfc; }
+td { padding:14px 16px; font-size:0.88rem; vertical-align:middle; }
+
+.cat-tag { padding:3px 10px; border-radius:50px; font-size:0.72rem; font-weight:600; }
+.cat-Latest\ Jobs  { background:#dbeafe; color:#1d4ed8; }
+.cat-Admit\ Card   { background:#fef3c7; color:#92400e; }
+.cat-Results       { background:#d1fae5; color:#065f46; }
+.cat-Syllabus      { background:#ede9fe; color:#5b21b6; }
+.cat-Answer\ Key   { background:#fce7f3; color:#9d174d; }
+
+.td-actions { display:flex; gap:8px; }
+.btn-edit  { background:var(--primary-light); color:var(--primary); border:none; padding:6px 12px; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:0.8rem; cursor:pointer; font-weight:500; transition:all 0.2s; }
+.btn-edit:hover { background:var(--primary); color:white; }
+.btn-danger { background:#fef2f2; color:var(--danger); border:none; padding:6px 10px; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:0.85rem; cursor:pointer; transition:all 0.2s; }
+.btn-danger:hover { background:var(--danger); color:white; }
+
+.empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+.empty-state i { font-size:2.5rem; opacity:0.3; display:block; margin-bottom:12px; }
+
+/* ── FORM OVERLAY ── */
+.overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+  z-index:200; align-items:flex-start; justify-content:center; padding:24px; overflow-y:auto;
+}
+.overlay.open { display:flex; }
+.form-panel {
+  background:var(--white); border-radius:var(--radius); width:100%; max-width:760px;
+  margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); animation:slideIn 0.2s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+.form-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.form-header h2 { font-size:1.1rem; font-weight:600; }
+.form-close { background:none; border:none; font-size:1.1rem; color:var(--muted); cursor:pointer; padding:6px; border-radius:var(--radius-sm); transition:background 0.2s; }
+.form-close:hover { background:#f1f5f9; }
+.form-body { padding:24px; }
+
+.field { margin-bottom:18px; }
+.field label { display:block; font-size:0.8rem; font-weight:600; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em; }
+.field input, .field select, .field textarea {
+  width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm);
+  font-family:'Poppins',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s;
+  color:var(--text); background:var(--white);
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color:var(--primary); }
+.field textarea { resize:vertical; min-height:80px; }
+
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.editor-label { font-size:0.8rem; font-weight:600; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em; }
+#editor { height:280px; background:white; }
+.ql-toolbar { border-radius:var(--radius-sm) var(--radius-sm) 0 0 !important; border-color:var(--border) !important; }
+.ql-container { border-radius:0 0 var(--radius-sm) var(--radius-sm) !important; border-color:var(--border) !important; font-family:'Poppins',sans-serif !important; font-size:0.9rem; }
+
+.form-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:flex-end; gap:12px; }
+.btn-cancel { background:#f1f5f9; color:var(--text); border:none; padding:10px 20px; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:0.88rem; font-weight:500; cursor:pointer; transition:background 0.2s; }
+.btn-cancel:hover { background:#e2e8f0; }
+.btn-save { background:var(--primary); color:white; border:none; padding:10px 24px; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:0.88rem; font-weight:600; cursor:pointer; transition:background 0.2s; display:flex; align-items:center; gap:8px; }
+.btn-save:hover { background:var(--primary-dark); }
+
+/* ── DELETE OVERLAY ── */
+.delete-box { background:var(--white); border-radius:var(--radius); padding:32px; width:100%; max-width:420px; margin:auto; text-align:center; animation:slideIn 0.2s ease; }
+.delete-box i.big { font-size:2.5rem; color:var(--danger); margin-bottom:16px; display:block; }
+.delete-box h3 { font-size:1.1rem; font-weight:600; margin-bottom:8px; }
+.delete-box p { font-size:0.88rem; color:var(--muted); margin-bottom:24px; }
+.delete-actions { display:flex; gap:12px; justify-content:center; }
+.btn-del-cancel { background:#f1f5f9; color:var(--text); border:none; padding:10px 24px; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-weight:500; font-size:0.9rem; cursor:pointer; }
+.btn-del-confirm { background:var(--danger); color:white; border:none; padding:10px 24px; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-weight:600; font-size:0.9rem; cursor:pointer; transition:background 0.2s; }
+.btn-del-confirm:hover { background:#dc2626; }
+
+/* ── TOAST ── */
+#toast {
+  display:none; position:fixed; bottom:28px; right:28px; z-index:999;
+  background:#1e293b; color:white; padding:12px 20px; border-radius:var(--radius-sm);
+  font-size:0.88rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  animation:fadeIn 0.25s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px) {
+  .stats-row { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:700px) {
+  .sidebar { transform:translateX(-100%); transition:transform 0.3s; }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .topbar { padding:0 16px; }
+  .content { padding:16px; }
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .field-row { grid-template-columns:1fr; }
+  table td:nth-child(3) { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo"><i class="fas fa-graduation-cap"></i> Exam<b>Zone</b></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active"><i class="fas fa-th-large"></i> Dashboard</button>
+    <button class="nav-item" onclick="openForm()"><i class="fas fa-plus-circle"></i> New Post</button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <h1>Dashboard</h1>
+    <div class="topbar-right">
+      <span class="admin-badge"><i class="fas fa-user-shield"></i> Admin</span>
+      <a href="index.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none"><i class="fas fa-external-link-alt"></i> View Site</a>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-icon" style="background:#eff6ff">📝</div><div class="stat-info"><p>Total Posts</p><h3>—</h3></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#eff6ff">💼</div><div class="stat-info"><p>Latest Jobs</p><h3>—</h3></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#fef3e8">🎫</div><div class="stat-info"><p>Admit Cards</p><h3>—</h3></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#e8fef0">🏆</div><div class="stat-info"><p>Results</p><h3>—</h3></div></div>
+    </div>
+
+    <!-- Table -->
+    <div class="toolbar">
+      <h2>All Blog Posts</h2>
+      <button class="btn-new" onclick="openForm()"><i class="fas fa-plus"></i> New Post</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="blogTableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyTable" style="display:none">
+        <i class="fas fa-inbox"></i>
+        <p>No posts yet. Click "New Post" to get started.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORM OVERLAY -->
+<div class="overlay" id="formOverlay">
+  <div class="form-panel">
+    <div class="form-header">
+      <h2 id="formTitle">New Blog Post</h2>
+      <button class="form-close" onclick="closeForm()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-body">
+      <div class="field">
+        <label>Post Title *</label>
+        <input type="text" id="blogTitle" placeholder="Enter post title..."/>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Category *</label>
+          <select id="blogCategory">
+            <option value="">— Select Category —</option>
+            <option value="Latest Jobs">Latest Jobs</option>
+            <option value="Admit Card">Admit Card</option>
+            <option value="Results">Results</option>
+            <option value="Syllabus">Syllabus</option>
+            <option value="Answer Key">Answer Key</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="blogDate"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Short Excerpt</label>
+        <textarea id="blogExcerpt" placeholder="Brief summary shown on card..."></textarea>
+      </div>
+      <div class="editor-label">Content *</div>
+      <div id="editor"></div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-cancel" onclick="closeForm()">Cancel</button>
+      <button class="btn-save" onclick="saveBlog()"><i class="fas fa-save"></i> Publish Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE OVERLAY -->
+<div class="overlay" id="deleteOverlay">
+  <div class="delete-box">
+    <i class="fas fa-trash-alt big"></i>
+    <h3>Delete this post?</h3>
+    <p>This action cannot be undone. The post will be permanently removed.</p>
+    <div class="delete-actions">
+      <button class="btn-del-cancel" onclick="closeDelete()">Cancel</button>
+      <button class="btn-del-confirm" onclick="confirmDelete()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+  window.onerror = function(msg, url, line) {
+  console.log(msg, line);
+  alert("Error: " + msg + " at line " + line);
+};
+sessionStorage.setItem('adminLoggedIn', 'true');
+
+const API = 'http://127.0.0.1:5000/api/blogs';
+const quill = new Quill('#editor', {
+  theme: 'snow',
+  placeholder: 'Write your blog content here...',
+  modules: {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      ['clean']
+    ]
+  }
+});
+
+let editingId = null;
+let deletingId = null;
+
+async function getBlogs() {
+  const res = await fetch(API);
+  return res.json();
+}
+
+async function renderStats() {
+  try {
+    const blogs = await getBlogs();
+    const statInfo = [
+      { label:'Total Posts',  value:blogs.length,                                          icon:'📝', bg:'#eff6ff' },
+      { label:'Latest Jobs',  value:blogs.filter(b=>b.category==='Latest Jobs').length,    icon:'💼', bg:'#eff6ff' },
+      { label:'Admit Cards',  value:blogs.filter(b=>b.category==='Admit Card').length,     icon:'🎫', bg:'#fef3e8' },
+      { label:'Results',      value:blogs.filter(b=>b.category==='Results').length,        icon:'🏆', bg:'#e8fef0' },
+    ];
+    document.getElementById('statsRow').innerHTML = statInfo.map(s => `
+      <div class="stat-card">
+        <div class="stat-icon" style="background:${s.bg}">${s.icon}</div>
+        <div class="stat-info"><p>${s.label}</p><h3>${s.value}</h3></div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function renderTable() {
+  try {
+    const blogs = await getBlogs();
+    blogs.sort((a,b) => new Date(b.date) - new Date(a.date));
+    const tbody = document.getElementById('blogTableBody');
+    const empty = document.getElementById('emptyTable');
+    if (blogs.length === 0) { tbody.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = blogs.map(b => {
+      const dateStr = b.date
+  ? new Date(b.date).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    })
+  : '—';
+      const catKey = 'cat-' + (b.category||'').replace(' ','\\ ');
+      return `<tr>
+        <td style="max-width:320px;font-weight:500">${b.title}</td>
+        <td><span class="cat-tag ${catKey}">${b.category}</span></td>
+        <td style="color:var(--muted);font-size:0.82rem">${dateStr}</td>
+        <td><div class="td-actions">
+          <button class="btn-edit" onclick="editBlog('${b._id}')">✏️ Edit</button>
+          <button class="btn-danger" onclick="deleteBlog('${b._id}')">🗑</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+function openForm() {
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'New Blog Post';
+  document.getElementById('blogTitle').value = '';
+  document.getElementById('blogCategory').value = '';
+  document.getElementById('blogDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('blogExcerpt').value = '';
+  quill.setContents([]);
+  document.querySelector('.btn-save').innerHTML = '<i class="fas fa-save"></i> Publish Post';
+  document.getElementById('formOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function editBlog(id) {
+  try {
+    const blogs = await getBlogs();
+    const blog = blogs.find(b => b._id === id);
+    if (!blog) return;
+    editingId = id;
+    document.getElementById('formTitle').textContent = 'Edit Blog Post';
+    document.getElementById('blogTitle').value = blog.title;
+    document.getElementById('blogCategory').value = blog.category;
+    document.getElementById('blogDate').value = blog.date || '';
+    document.getElementById('blogExcerpt').value = blog.excerpt || '';
+    quill.clipboard.dangerouslyPasteHTML(blog.content || '');
+    document.querySelector('.btn-save').innerHTML = '<i class="fas fa-save"></i> Update Post';
+    document.getElementById('formOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } catch(e) { console.error(e); }
+}
+
+async function saveBlog() {
+  const title    = document.getElementById('blogTitle').value.trim();
+  const category = document.getElementById('blogCategory').value;
+  const date     = document.getElementById('blogDate').value;
+  const excerpt  = document.getElementById('blogExcerpt').value.trim();
+  const content  = quill.root.innerHTML;
+
+  if (!title || !category) { alert('Please fill in Title and Category.'); return; }
+
+  const blogData = { title, category, date, excerpt, content };
+  try {
+    if (editingId) {
+      await fetch(`${API}/${editingId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(blogData) });
+    } else {
+      await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(blogData) });
+    }
+    closeForm();
+    await renderStats();
+    await renderTable();
+    showToast(editingId ? '✅ Post updated!' : '✅ Post published!');
+  } catch(e) { alert('Failed to save. Is the server running?'); }
+}
+
+function closeForm() {
+  document.getElementById('formOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function deleteBlog(id) {
+  deletingId = id;
+  document.getElementById('deleteOverlay').classList.add('open');
+}
+function closeDelete() {
+  document.getElementById('deleteOverlay').classList.remove('open');
+  deletingId = null;
+}
+async function confirmDelete() {
+  if (!deletingId) return;
+  try {
+    await fetch(`${API}/${deletingId}`, { method:'DELETE' });
+    closeDelete();
+    await renderStats();
+    await renderTable();
+    showToast('🗑 Post deleted.');
+  } catch(e) { alert('Failed to delete.'); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2800);
+}
+
+function logout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  window.location.href = 'admin-login.html';
+}
+
+document.getElementById('formOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('formOverlay')) closeForm();
+});
+document.getElementById('deleteOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('deleteOverlay')) closeDelete();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeForm(); closeDelete(); } });
+
+renderStats();
+renderTable();
+</script>
+</body>
+</html>
